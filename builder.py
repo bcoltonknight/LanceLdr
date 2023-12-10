@@ -127,6 +127,6 @@ void antiDebug()
             f.write(source)
 
         os.system("msbuild ShellcodeLoaderBuilder.sln /p:Configuration=Release /p:DebugSymbols=false /p:DebugType=None")
-        #os.remove("ShellcodeLoaderBuilder/Source.cpp")
+        os.remove("ShellcodeLoaderBuilder/Source.cpp")
     except FileNotFoundError:
         print('Invalid file')
