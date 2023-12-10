@@ -70,7 +70,6 @@ HMODULE getLibByHash(PPEB peb, size_t hash) {
 
     //linkedList = ldr->InMemoryOrderModuleList;
     head = &(ldr->InMemoryOrderModuleList);
-    printf("Got pointer to linked list struct\n");
     curEntry = head->Flink;
 
     while (true)
@@ -83,20 +82,14 @@ HMODULE getLibByHash(PPEB peb, size_t hash) {
 
         if (module == NULL)
         {
-            printf("Module was null\n");
             return NULL;
         }
 
-        printf("Full DLL Name: %wZ\n", module->FullDllName);
         if (hash == hashUnicode(module->FullDllName))
         {
-            printf("HOLY SHIT IT IS THE KERNEL\n");
             // Get base address as handle
             modBase = (HMODULE)module->DllBase;
-            printf("DLL Base Address: %p\n", modBase);
         }
-        printf("Name as hash: %llu\n", hashUnicode(module->FullDllName));
-        printf("DLL Base Address: %p\n", module->DllBase);
         // advance to the next object
         curEntry = curEntry->Flink;
 
@@ -127,20 +120,17 @@ UINT_PTR getFuncByHash(HMODULE handle, size_t hash)
     PWORD ordinals = (PWORD)((UINT_PTR)handle + exports->AddressOfNameOrdinals);
     PDWORD names = (PDWORD)((UINT_PTR)handle + exports->AddressOfNames);
     PDWORD functions = (PDWORD)((UINT_PTR)handle + exports->AddressOfFunctions);
-
-    printf("Number of exports: %d\n", exports->NumberOfNames);
-
     for (DWORD i = 0; i < exports->NumberOfNames; i++)
     {
         LPCSTR name = (LPCSTR)((UINT_PTR)handle + names[ordinals[i]]);
         //LPCSTR name = (LPCSTR)((ULONG_PTR)kernBase + functions[ordinals[i]]);
-        printf("Function: %s\n", name);
-        printf("Name as hash: %llu\n", hashFunction(name));
         if (hashFunction(name) == hash)
         {
             return ((UINT_PTR)handle + functions[ordinals[i]]);
         }
     }
+
+    return NULL;
 }
 
 

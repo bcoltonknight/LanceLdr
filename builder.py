@@ -22,7 +22,7 @@ def init_args():
                         required=True)
 
     parser.add_argument('-x', '--xor', help='XOR key to encrypt with', 
-                        default=genString(64))
+                        default=genString(256))
 
     parser.add_argument('-ad', '--anti-debug', help='Enable anti debugging option', 
                         dest='debug', 
