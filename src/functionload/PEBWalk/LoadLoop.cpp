@@ -1,0 +1,1 @@
+<FUNC_VAR> = (<FUNC_CONSTANT>)getFuncByHash(kernelHandle, <FUNC_HASH>);

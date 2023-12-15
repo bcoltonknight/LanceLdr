@@ -1,0 +1,20 @@
+{
+    "functionsNeeded": {
+        "local":
+            [
+                ["CreateThread", "<CREATE_THREAD>"],
+                ["VirtualProtect", "<VIRTUAL_PROTECT>"],
+                ["VirtualAlloc", "<VIRTUAL_ALLOC>"]
+            ],
+        "inject":
+        [
+            ["CreateProcessA", "<CREATE_PROCESS_A>"],
+            ["OpenProcess", "<OPEN_PROCESS>"],
+            ["VirtualAllocEx", "<VIRTUAL_ALLOC_EX>"],
+            ["WriteProcessMemory", "<WRITE_PROCESS_MEMORY>"],
+            ["VirtualProtectEx", "<VIRTUAL_PROTECT_EX>"],
+            ["CreateRemoteThread", "<CREATE_REMOTE_THREAD>"],
+            ["ResumeThread", "<RESUME_THREAD>"]
+        ]
+    }
+}
