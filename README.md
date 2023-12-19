@@ -1,4 +1,4 @@
-# Shellcode_Loader_Builder
+# LanceLdr
 A super basic project I built which includes a builder to XOR encrypt your shellcode and build a loader PE for it. I implemented some things to dynamically pull function addresses from the PEB ldr table so it doesn't need signatured Windows functions. Wouldn't recomend for an actual engagement but works ok for academic stuff.
 
 ## Usage
