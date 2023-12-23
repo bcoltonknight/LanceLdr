@@ -33,7 +33,6 @@ DWORD getPidByName(LPCWCHAR proc)
 	curProc.dwSize = sizeof(PROCESSENTRY32);
 
 	if (!Process32First(snapshot, &curProc)) {
-		printf("Failed to retreive pointer to process\n");
 		return -1;
 	}
 
@@ -96,7 +95,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	si.StartupInfo.cb = sizeof(STARTUPINFOEXA);
 
 	// Spawn process to inject into
-	createProcessA(NULL, (LPSTR)"C:\\Windows\\System32\\notepad.exe", NULL, NULL, FALSE, CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT, NULL, NULL, &si.StartupInfo, &pi);
+	createProcessA(NULL, (LPSTR)"C:\\Windows\\System32\\notepad.exe", NULL, NULL, TRUE, CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT, NULL, NULL, &si.StartupInfo, &pi);
 	
 
 	//CreateProcessA(NULL, (LPSTR)"C:\\Windows\\System32\\notepad.exe", NULL, NULL, TRUE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);

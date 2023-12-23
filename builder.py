@@ -37,12 +37,12 @@ def init_args():
                         action='store_true')
     
     parser.add_argument('-m', '--method', 
-                        help='Method to use to dynamically load functions', 
+                        help='''Method to use to dynamically load functions.\nDInvoke: Use LoadLibraryA and GetProcAddress to get function pointers.\nPEBWalk: Grab a handle to the PEB and walk through the LDR table to find the hash for desired functions.''', 
                         choices=['dinvoke', 'pebwalk'],
                         dest='method',
                         default='dinvoke')
     parser.add_argument('-l', '--load', 
-                        help='Method to use to load and execute shellcode', 
+                        help='Method to use to load and execute shellcode.\n CreateThread: Generic invocation of CreateThread to start running the shellcode. Inject: Spawn a notepad.exe process in a suspended state with a spoofed PPID targeting explorer.exe then inject into it before using CreateRemoteThread.\nCallback: Register the shellcode as the callback function for the loaded shellcode to indirectly transfer execution flow it it.', 
                         choices=['createthread', 'inject', 'callback'],
                         default='callback')
 
