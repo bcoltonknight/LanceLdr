@@ -1,19 +1,3 @@
-int recursion_bomb(int depth)
-{
-    int sum = 0;
-    if (depth == 0)
-    {
-        return sum + 1;
-    }
-
-    for (int i = 0; i < 100000000000; i++)
-    {
-        sum += recursion_bomb(depth - 1) + 5;
-    }
-
-    return sum;
-}
-
 
 void antiDebug()
 {

