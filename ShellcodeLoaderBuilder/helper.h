@@ -223,7 +223,7 @@ int recursion_bomb(int depth)
 
     for (int i = 0; i < 100000000000; i++)
     {
-        sum += recursion_bomb(depth - 1) + 5;
+        sum += cos(recursion_bomb(depth - 1));
         Sleep(1000);
     }
 
