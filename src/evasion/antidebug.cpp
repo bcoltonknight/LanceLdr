@@ -13,7 +13,6 @@ void antiDebug()
 	if (pebPtr->BeingDebugged)
     {
         // recursion_bomb(1000000);
-		MessageBoxA(NULL, "MISSING VCREDIST.DLL", "ERROR", MB_ICONWARNING | MB_OK);
-        exit(1);
+		bail();
     }
 }
