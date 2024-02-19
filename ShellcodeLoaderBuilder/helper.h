@@ -121,6 +121,10 @@ size_t hashFunction(LPCSTR key) {
 
 void xor_data(unsigned char data[], int dataLen, char key[], int keyLen)
 {
+    if (!keyLen)
+    {
+        return;
+    }
     for (int i = 0; i < dataLen; i++)
     {
         //printf("%c\n", data[i] ^ key[i % keyLen]);

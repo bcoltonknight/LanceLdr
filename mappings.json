@@ -14,7 +14,8 @@
             ["WriteProcessMemory", "<WRITE_PROCESS_MEMORY>"],
             ["VirtualProtectEx", "<VIRTUAL_PROTECT_EX>"],
             ["CreateRemoteThread", "<CREATE_REMOTE_THREAD>"],
-            ["ResumeThread", "<RESUME_THREAD>"]
+            ["ResumeThread", "<RESUME_THREAD>"],
+            ["VirtualAlloc", "<VIRTUAL_ALLOC>"]
         ],
         "callback":
             [

