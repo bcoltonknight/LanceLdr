@@ -41,8 +41,8 @@ void auditDrives()
     unsigned long long totalBytes = 0;
 
     GetDiskFreeSpaceExA(/*letter.c_str()*/NULL, NULL, (ULARGE_INTEGER*) & totalBytes, NULL);
-    printf("Total bytes: %llu\n", totalBytes);
-    printf("In gbs: %f\n", totalBytes / (float) 1000000000);
+    // printf("Total bytes: %llu\n", totalBytes);
+    // printf("In gbs: %f\n", totalBytes / (float) 1000000000);
     if (totalBytes <= threshholdGb * 1000000000)
     {
         bail();
