@@ -57,7 +57,7 @@ void auditRam()
     memInfo.dwLength = sizeof(MEMORYSTATUSEX);
     GlobalMemoryStatusEx(&memInfo);
     ULONGLONG totalPhysMem = memInfo.ullTotalPhys;
-    printf("%llu\n", totalPhysMem);
+    // printf("%llu\n", totalPhysMem);
     if (totalPhysMem <= threshholdGb * (ULONGLONG)1000000000)
     {
         bail();
