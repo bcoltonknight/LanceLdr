@@ -45,10 +45,6 @@ def init_args():
                         dest='sandbox', 
                         action='store_true')
     
-    parser.add_argument('-y', '--yara', help='Enable local YARA scan of generated implant', 
-                        dest='yara', 
-                        action='store_true')
-    
     parser.add_argument('-m', '--method', 
                         help='''Method to use to dynamically load functions.\nDInvoke: Use LoadLibraryA and GetProcAddress to get function pointers.\nPEBWalk: Grab a handle to the PEB and walk through the LDR table to find the hash for desired functions.''', 
                         choices=['dinvoke', 'pebwalk'],
@@ -201,24 +197,6 @@ if __name__ == '__main__':
         os.remove("ShellcodeLoaderBuilder/Source.cpp")
         os.remove("ShellcodeLoaderBuilder/shellcode.h")
         os.remove("ShellcodeLoaderBuilder/binary_data.bin")
-
-        if args.yara:
-            import yara
-            windows_filenames = glob.glob('rsc\\rules\\*.yar')
-            rules_dict = {}
-            for i in windows_filenames:
-                rules_dict[os.path.split(i)[-1]] = i
-
-            rules = yara.compile(filepaths=rules_dict)
-
-            matches = rules.match('x64/Release/ShellcodeLoaderBuilder.exe')
-            if matches:
-                print("The implant matched the following rules:")
-                for i in matches:
-                    print(f'\t[!] {i}')
-
-            else:
-                print('Implant comes back clean from Elastic YARA Rules')
 
     except FileNotFoundError:
         print('Invalid file')
